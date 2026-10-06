@@ -17,7 +17,7 @@ jobs:
     - name: Generate Visual Studio solution
       shell: cmd
       run: |
-        premake5.exe vs2022
+        premake5.exe vs2019
 
     - name: Build solution
       run: msbuild OpenParrot.sln /p:Configuration=Release /p:Platform=x64 /m
@@ -26,7 +26,7 @@ jobs:
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path full_build
-        $dirs = Get-ChildItem -Path . -Recurse -Directory | Where-Object { $_.Name -eq "Release" -or $_.FullName -match "bin\\x64\\Release" }
+        $dirs = Get-ChildItem -Path . -Recurse -Directory | Where-Object { $_.Name -eq "Release" -or $_.FullName -match "bin\\x64\\Release" -or $_.FullName -match "bin\\Release" }
         foreach ($dir in $dirs) {
           Write-Host "Copying from: $($dir.FullName)"
           Copy-Item -Path "$($dir.FullName)\*" -Destination full_build -Recurse -Force -ErrorAction SilentlyContinue
