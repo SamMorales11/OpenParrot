@@ -1,0 +1,41 @@
+name: Build OpenParrot Asakura
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Generate Visual Studio solution
+      shell: cmd
+      run: |
+        premake5.exe vs2022
+
+    - name: Build solution
+      run: msbuild OpenParrot.sln /p:Configuration=Release /p:Platform=x64 /m
+
+    - name: Find and copy output
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path full_build
+        $dirs = Get-ChildItem -Path . -Recurse -Directory | Where-Object { $_.Name -eq "Release" -or $_.FullName -match "bin\\x64\\Release" }
+        foreach ($dir in $dirs) {
+          Write-Host "Copying from: $($dir.FullName)"
+          Copy-Item -Path "$($dir.FullName)\*" -Destination full_build -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        Get-ChildItem full_build -Recurse | Select-Object FullName
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: OpenParrot-Asakura-Build
+        path: full_build/
+        if-no-files-found: warn
